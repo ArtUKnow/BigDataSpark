@@ -8,15 +8,15 @@ docker-compose up -d
 
 2. Запускаем первый скрипт, чтобы собрать "звезду" в постгресе:
 ```bash
-docker exec -it bigdataspark-spark-1 spark-submit \
-  --packages org.postgresql:postgresql:42.6.0 \
+docker exec -it bigdataspark-spark-1 /opt/spark/bin/spark-submit \
+  --jars /opt/spark/jobs/postgresql-42.6.0.jar \
   /opt/spark/jobs/lab2_postgres.py
 ```
 
 3. Запускаем второй скрипт, чтобы собрать витрины в кликхаусе:
 ```bash
-docker exec -it bigdataspark-spark-1 spark-submit \
-  --packages org.postgresql:postgresql:42.6.0,com.clickhouse:clickhouse-jdbc:0.4.6 \
+docker exec -it bigdataspark-spark-1 /opt/spark/bin/spark-submit \
+  --jars /opt/spark/jobs/postgresql-42.6.0.jar,/opt/spark/jobs/clickhouse-jdbc-0.4.6-all.jar \
   /opt/spark/jobs/lab2_clickhouse.py
 ```
 
