@@ -22,10 +22,10 @@ services:
       - "9000:9000"
 
   spark:
-    image: bitnami/spark:3.5.0
+    image: apache/spark:3.5.0
     environment:
       - SPARK_MODE=master
     ports:
       - "8080:8080"
     volumes:
-      - ./spark_jobs:/opt/bitnami/spark/jobs
+      - ./spark_jobs:/opt/spark/jobs

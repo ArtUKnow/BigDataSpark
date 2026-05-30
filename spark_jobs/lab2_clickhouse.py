@@ -24,7 +24,6 @@ dim_store.createOrReplaceTempView("dim_store")
 dim_supplier.createOrReplaceTempView("dim_supplier")
 dim_location.createOrReplaceTempView("dim_location")
 
-# Product Sales
 report_product = spark.sql("""
     SELECT 
         p.product_name,
@@ -39,7 +38,6 @@ report_product = spark.sql("""
 """)
 report_product.write.jdbc(url=jdbc_ch, table="report_product", mode="overwrite", properties=prop_ch)
 
-# Customer Sales
 report_customer = spark.sql("""
     SELECT 
         c.first_name,
@@ -54,7 +52,6 @@ report_customer = spark.sql("""
 """)
 report_customer.write.jdbc(url=jdbc_ch, table="report_customer", mode="overwrite", properties=prop_ch)
 
-# Time Sales
 report_time = spark.sql("""
     SELECT 
         YEAR(f.sale_date) as sale_year,
@@ -66,7 +63,6 @@ report_time = spark.sql("""
 """)
 report_time.write.jdbc(url=jdbc_ch, table="report_time", mode="overwrite", properties=prop_ch)
 
-# Store Sales
 report_store = spark.sql("""
     SELECT 
         s.store_name,
@@ -81,7 +77,6 @@ report_store = spark.sql("""
 """)
 report_store.write.jdbc(url=jdbc_ch, table="report_store", mode="overwrite", properties=prop_ch)
 
-# Supplier Sales
 report_supplier = spark.sql("""
     SELECT 
         sup.supplier_name,
@@ -96,7 +91,6 @@ report_supplier = spark.sql("""
 """)
 report_supplier.write.jdbc(url=jdbc_ch, table="report_supplier", mode="overwrite", properties=prop_ch)
 
-# Product Quality
 report_quality = spark.sql("""
     SELECT 
         p.product_name,

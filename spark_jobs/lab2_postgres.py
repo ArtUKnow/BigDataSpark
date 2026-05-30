@@ -13,11 +13,9 @@ properties = {
     "stringtype": "unspecified"
 }
 
-# Read raw data
 raw_df = spark.read.jdbc(url=jdbc_url, table="raw_data", properties=properties)
 raw_df.createOrReplaceTempView("raw_data")
 
-# Dim Location
 dim_location = spark.sql("""
     SELECT DISTINCT country, city, state, postal_code, address FROM (
         SELECT customer_country as country, NULL as city, NULL as state, customer_postal_code as postal_code, NULL as address FROM raw_data WHERE customer_country IS NOT NULL OR customer_postal_code IS NOT NULL
@@ -32,7 +30,6 @@ dim_location = spark.sql("""
 
 dim_location.createOrReplaceTempView("dim_location_temp")
 
-# Dim Customer
 dim_customer = spark.sql("""
     SELECT DISTINCT 
         CAST(r.sale_customer_id AS INT) as source_customer_id,
@@ -50,7 +47,6 @@ dim_customer = spark.sql("""
 """).withColumn("customer_id", monotonically_increasing_id())
 dim_customer.createOrReplaceTempView("dim_customer_temp")
 
-# Dim Pet
 dim_pet = spark.sql("""
     SELECT DISTINCT 
         r.customer_pet_type as pet_type,
@@ -64,7 +60,6 @@ dim_pet = spark.sql("""
 """).withColumn("pet_id", monotonically_increasing_id())
 dim_pet.createOrReplaceTempView("dim_pet_temp")
 
-# Dim Seller
 dim_seller = spark.sql("""
     SELECT DISTINCT 
         CAST(r.sale_seller_id AS INT) as source_seller_id,
@@ -81,7 +76,6 @@ dim_seller = spark.sql("""
 """).withColumn("seller_id", monotonically_increasing_id())
 dim_seller.createOrReplaceTempView("dim_seller_temp")
 
-# Dim Supplier
 dim_supplier = spark.sql("""
     SELECT DISTINCT 
         r.supplier_name,
@@ -99,7 +93,6 @@ dim_supplier = spark.sql("""
 """).withColumn("supplier_id", monotonically_increasing_id())
 dim_supplier.createOrReplaceTempView("dim_supplier_temp")
 
-# Dim Store
 dim_store = spark.sql("""
     SELECT DISTINCT 
         r.store_name,
@@ -117,7 +110,6 @@ dim_store = spark.sql("""
 """).withColumn("store_id", monotonically_increasing_id())
 dim_store.createOrReplaceTempView("dim_store_temp")
 
-# Dim Product
 dim_product = spark.sql("""
     SELECT DISTINCT 
         CAST(r.sale_product_id AS INT) as source_product_id,
@@ -141,7 +133,6 @@ dim_product = spark.sql("""
 """).withColumn("product_id", monotonically_increasing_id())
 dim_product.createOrReplaceTempView("dim_product_temp")
 
-# Fact Sales
 fact_sales = spark.sql("""
     SELECT 
         CAST(r.id AS INT) as source_id,
@@ -159,14 +150,13 @@ fact_sales = spark.sql("""
     LEFT JOIN dim_store_temp st ON st.store_name = r.store_name
 """)
 
-# Write back to Postgres
-dim_location.write.jdbc(url=jdbc_url, table="dim_location", mode="overwrite", properties=properties)
-dim_customer.write.jdbc(url=jdbc_url, table="dim_customer", mode="overwrite", properties=properties)
-dim_pet.write.jdbc(url=jdbc_url, table="dim_pet", mode="overwrite", properties=properties)
-dim_seller.write.jdbc(url=jdbc_url, table="dim_seller", mode="overwrite", properties=properties)
-dim_supplier.write.jdbc(url=jdbc_url, table="dim_supplier", mode="overwrite", properties=properties)
-dim_store.write.jdbc(url=jdbc_url, table="dim_store", mode="overwrite", properties=properties)
-dim_product.write.jdbc(url=jdbc_url, table="dim_product", mode="overwrite", properties=properties)
-fact_sales.write.jdbc(url=jdbc_url, table="fact_sales", mode="overwrite", properties=properties)
+dim_location.write.jdbc(url=jdbc_url, table="dim_location", mode="append", properties=properties)
+dim_customer.write.jdbc(url=jdbc_url, table="dim_customer", mode="append", properties=properties)
+dim_pet.write.jdbc(url=jdbc_url, table="dim_pet", mode="append", properties=properties)
+dim_seller.write.jdbc(url=jdbc_url, table="dim_seller", mode="append", properties=properties)
+dim_supplier.write.jdbc(url=jdbc_url, table="dim_supplier", mode="append", properties=properties)
+dim_store.write.jdbc(url=jdbc_url, table="dim_store", mode="append", properties=properties)
+dim_product.write.jdbc(url=jdbc_url, table="dim_product", mode="append", properties=properties)
+fact_sales.write.jdbc(url=jdbc_url, table="fact_sales", mode="append", properties=properties)
 
 spark.stop()
