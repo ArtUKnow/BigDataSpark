@@ -1,9 +1,11 @@
+from pyspark.sql.functions import expr
+from pyspark.sql.window import Window
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, monotonically_increasing_id, when
+from pyspark.sql.functions import col, row_number, when
 
 spark = SparkSession.builder \
     .appName("ETL_Postgres") \
-    .getOrCreate()
+    .config("spark.sql.legacy.timeParserPolicy", "LEGACY").getOrCreate()
 
 jdbc_url = "jdbc:postgresql://postgres:5432/analytics"
 properties = {
@@ -26,7 +28,7 @@ dim_location = spark.sql("""
         UNION
         SELECT supplier_country, supplier_city, NULL, NULL, supplier_address FROM raw_data WHERE supplier_country IS NOT NULL OR supplier_city IS NOT NULL OR supplier_address IS NOT NULL
     )
-""").withColumn("location_id", monotonically_increasing_id())
+""").withColumn("location_id", row_number().over(Window.orderBy(expr("1"))))
 
 dim_location.createOrReplaceTempView("dim_location_temp")
 
@@ -44,7 +46,7 @@ dim_customer = spark.sql("""
         (l.postal_code = r.customer_postal_code OR (l.postal_code IS NULL AND r.customer_postal_code IS NULL)) AND
         l.city IS NULL AND l.state IS NULL AND l.address IS NULL
     WHERE r.sale_customer_id IS NOT NULL AND r.sale_customer_id != ''
-""").withColumn("customer_id", monotonically_increasing_id())
+""").withColumn("customer_id", row_number().over(Window.orderBy(expr("1"))))
 dim_customer.createOrReplaceTempView("dim_customer_temp")
 
 dim_pet = spark.sql("""
@@ -57,7 +59,7 @@ dim_pet = spark.sql("""
     FROM raw_data r
     JOIN dim_customer_temp c ON c.source_customer_id = CAST(r.sale_customer_id AS INT)
     WHERE r.customer_pet_type IS NOT NULL AND r.customer_pet_type != ''
-""").withColumn("pet_id", monotonically_increasing_id())
+""").withColumn("pet_id", row_number().over(Window.orderBy(expr("1"))))
 dim_pet.createOrReplaceTempView("dim_pet_temp")
 
 dim_seller = spark.sql("""
@@ -73,7 +75,7 @@ dim_seller = spark.sql("""
         (l.postal_code = r.seller_postal_code OR (l.postal_code IS NULL AND r.seller_postal_code IS NULL)) AND
         l.city IS NULL AND l.state IS NULL AND l.address IS NULL
     WHERE r.sale_seller_id IS NOT NULL AND r.sale_seller_id != ''
-""").withColumn("seller_id", monotonically_increasing_id())
+""").withColumn("seller_id", row_number().over(Window.orderBy(expr("1"))))
 dim_seller.createOrReplaceTempView("dim_seller_temp")
 
 dim_supplier = spark.sql("""
@@ -90,7 +92,7 @@ dim_supplier = spark.sql("""
         (l.address = r.supplier_address OR (l.address IS NULL AND r.supplier_address IS NULL)) AND
         l.state IS NULL AND l.postal_code IS NULL
     WHERE r.supplier_name IS NOT NULL AND r.supplier_name != ''
-""").withColumn("supplier_id", monotonically_increasing_id())
+""").withColumn("supplier_id", row_number().over(Window.orderBy(expr("1"))))
 dim_supplier.createOrReplaceTempView("dim_supplier_temp")
 
 dim_store = spark.sql("""
@@ -107,7 +109,7 @@ dim_store = spark.sql("""
         (l.address = r.store_location OR (l.address IS NULL AND r.store_location IS NULL)) AND
         l.postal_code IS NULL
     WHERE r.store_name IS NOT NULL AND r.store_name != ''
-""").withColumn("store_id", monotonically_increasing_id())
+""").withColumn("store_id", row_number().over(Window.orderBy(expr("1"))))
 dim_store.createOrReplaceTempView("dim_store_temp")
 
 dim_product = spark.sql("""
@@ -130,7 +132,7 @@ dim_product = spark.sql("""
     FROM raw_data r
     LEFT JOIN dim_supplier_temp s ON s.supplier_name = r.supplier_name
     WHERE r.sale_product_id IS NOT NULL AND r.sale_product_id != ''
-""").withColumn("product_id", monotonically_increasing_id())
+""").withColumn("product_id", row_number().over(Window.orderBy(expr("1"))))
 dim_product.createOrReplaceTempView("dim_product_temp")
 
 fact_sales = spark.sql("""
@@ -150,13 +152,13 @@ fact_sales = spark.sql("""
     LEFT JOIN dim_store_temp st ON st.store_name = r.store_name
 """)
 
-dim_location.write.jdbc(url=jdbc_url, table="dim_location", mode="append", properties=properties)
-dim_customer.write.jdbc(url=jdbc_url, table="dim_customer", mode="append", properties=properties)
-dim_pet.write.jdbc(url=jdbc_url, table="dim_pet", mode="append", properties=properties)
-dim_seller.write.jdbc(url=jdbc_url, table="dim_seller", mode="append", properties=properties)
-dim_supplier.write.jdbc(url=jdbc_url, table="dim_supplier", mode="append", properties=properties)
-dim_store.write.jdbc(url=jdbc_url, table="dim_store", mode="append", properties=properties)
-dim_product.write.jdbc(url=jdbc_url, table="dim_product", mode="append", properties=properties)
-fact_sales.write.jdbc(url=jdbc_url, table="fact_sales", mode="append", properties=properties)
+dim_location.coalesce(1).write.jdbc(url=jdbc_url, table="dim_location", mode="append", properties=properties)
+dim_customer.coalesce(1).write.jdbc(url=jdbc_url, table="dim_customer", mode="append", properties=properties)
+dim_pet.coalesce(1).write.jdbc(url=jdbc_url, table="dim_pet", mode="append", properties=properties)
+dim_seller.coalesce(1).write.jdbc(url=jdbc_url, table="dim_seller", mode="append", properties=properties)
+dim_supplier.coalesce(1).write.jdbc(url=jdbc_url, table="dim_supplier", mode="append", properties=properties)
+dim_store.coalesce(1).write.jdbc(url=jdbc_url, table="dim_store", mode="append", properties=properties)
+dim_product.coalesce(1).write.jdbc(url=jdbc_url, table="dim_product", mode="append", properties=properties)
+fact_sales.coalesce(1).write.jdbc(url=jdbc_url, table="fact_sales", mode="append", properties=properties)
 
 spark.stop()

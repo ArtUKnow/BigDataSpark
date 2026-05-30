@@ -63,7 +63,7 @@ COPY raw_data FROM '/data/MOCK_DATA (8).csv' DELIMITER ',' CSV HEADER;
 COPY raw_data FROM '/data/MOCK_DATA (9).csv' DELIMITER ',' CSV HEADER;
 
 CREATE TABLE dim_location (
-    location_id SERIAL PRIMARY KEY,
+    location_id BIGSERIAL PRIMARY KEY,
     country TEXT,
     city TEXT,
     state TEXT,
@@ -73,55 +73,55 @@ CREATE TABLE dim_location (
 );
 
 CREATE TABLE dim_customer (
-    customer_id SERIAL PRIMARY KEY,
-    source_customer_id INT,
+    customer_id BIGSERIAL PRIMARY KEY,
+    source_customer_id BIGINT,
     first_name TEXT,
     last_name TEXT,
     age INT,
     email TEXT,
-    location_id INT REFERENCES dim_location(location_id)
+    location_id BIGINT REFERENCES dim_location(location_id)
 );
 
 CREATE TABLE dim_pet (
-    pet_id SERIAL PRIMARY KEY,
+    pet_id BIGSERIAL PRIMARY KEY,
     pet_type TEXT,
     pet_category TEXT,
     pet_breed TEXT,
     pet_name TEXT,
-    customer_id INT REFERENCES dim_customer(customer_id)
+    customer_id BIGINT REFERENCES dim_customer(customer_id)
 );
 
 CREATE TABLE dim_seller (
-    seller_id SERIAL PRIMARY KEY,
-    source_seller_id INT,
+    seller_id BIGSERIAL PRIMARY KEY,
+    source_seller_id BIGINT,
     first_name TEXT,
     last_name TEXT,
     email TEXT,
-    location_id INT REFERENCES dim_location(location_id)
+    location_id BIGINT REFERENCES dim_location(location_id)
 );
 
 CREATE TABLE dim_supplier (
-    supplier_id SERIAL PRIMARY KEY,
+    supplier_id BIGSERIAL PRIMARY KEY,
     supplier_name TEXT,
     contact_name TEXT,
     email TEXT,
     phone TEXT,
-    location_id INT REFERENCES dim_location(location_id),
+    location_id BIGINT REFERENCES dim_location(location_id),
     UNIQUE (supplier_name)
 );
 
 CREATE TABLE dim_store (
-    store_id SERIAL PRIMARY KEY,
+    store_id BIGSERIAL PRIMARY KEY,
     store_name TEXT,
     phone TEXT,
     email TEXT,
-    location_id INT REFERENCES dim_location(location_id),
+    location_id BIGINT REFERENCES dim_location(location_id),
     UNIQUE (store_name)
 );
 
 CREATE TABLE dim_product (
-    product_id SERIAL PRIMARY KEY,
-    source_product_id INT,
+    product_id BIGSERIAL PRIMARY KEY,
+    source_product_id BIGINT,
     product_name TEXT,
     category TEXT,
     price NUMERIC,
@@ -135,17 +135,17 @@ CREATE TABLE dim_product (
     reviews INT,
     release_date DATE,
     expiry_date DATE,
-    supplier_id INT REFERENCES dim_supplier(supplier_id)
+    supplier_id BIGINT REFERENCES dim_supplier(supplier_id)
 );
 
 CREATE TABLE fact_sales (
-    sale_id SERIAL PRIMARY KEY,
+    sale_id BIGSERIAL PRIMARY KEY,
     source_id INT,
     sale_date DATE,
-    customer_id INT REFERENCES dim_customer(customer_id),
-    seller_id INT REFERENCES dim_seller(seller_id),
-    product_id INT REFERENCES dim_product(product_id),
-    store_id INT REFERENCES dim_store(store_id),
+    customer_id BIGINT REFERENCES dim_customer(customer_id),
+    seller_id BIGINT REFERENCES dim_seller(seller_id),
+    product_id BIGINT REFERENCES dim_product(product_id),
+    store_id BIGINT REFERENCES dim_store(store_id),
     quantity INT,
     total_price NUMERIC
 );

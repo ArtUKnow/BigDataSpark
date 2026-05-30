@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 
 spark = SparkSession.builder \
     .appName("ETL_ClickHouse") \
-    .getOrCreate()
+    .config("spark.sql.legacy.timeParserPolicy", "LEGACY").getOrCreate()
 
 jdbc_pg = "jdbc:postgresql://postgres:5432/analytics"
 prop_pg = {"user": "user", "password": "password", "driver": "org.postgresql.Driver"}
