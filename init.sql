@@ -1,4 +1,4 @@
-CREATE TABLE raw_data (
+CREATE TABLE staging_raw_data (
     id INT,
     customer_first_name TEXT,
     customer_last_name TEXT,
@@ -51,16 +51,52 @@ CREATE TABLE raw_data (
     supplier_country TEXT
 );
 
-COPY raw_data FROM '/data/MOCK_DATA.csv' DELIMITER ',' CSV HEADER;
-COPY raw_data FROM '/data/MOCK_DATA (1).csv' DELIMITER ',' CSV HEADER;
-COPY raw_data FROM '/data/MOCK_DATA (2).csv' DELIMITER ',' CSV HEADER;
-COPY raw_data FROM '/data/MOCK_DATA (3).csv' DELIMITER ',' CSV HEADER;
-COPY raw_data FROM '/data/MOCK_DATA (4).csv' DELIMITER ',' CSV HEADER;
-COPY raw_data FROM '/data/MOCK_DATA (5).csv' DELIMITER ',' CSV HEADER;
-COPY raw_data FROM '/data/MOCK_DATA (6).csv' DELIMITER ',' CSV HEADER;
-COPY raw_data FROM '/data/MOCK_DATA (7).csv' DELIMITER ',' CSV HEADER;
-COPY raw_data FROM '/data/MOCK_DATA (8).csv' DELIMITER ',' CSV HEADER;
-COPY raw_data FROM '/data/MOCK_DATA (9).csv' DELIMITER ',' CSV HEADER;
+CREATE TABLE raw_data (
+    file_num INT,
+    LIKE staging_raw_data
+);
+
+TRUNCATE staging_raw_data;
+COPY staging_raw_data FROM '/data/MOCK_DATA.csv' DELIMITER ',' CSV HEADER;
+INSERT INTO raw_data SELECT 0, * FROM staging_raw_data;
+
+TRUNCATE staging_raw_data;
+COPY staging_raw_data FROM '/data/MOCK_DATA (1).csv' DELIMITER ',' CSV HEADER;
+INSERT INTO raw_data SELECT 1, * FROM staging_raw_data;
+
+TRUNCATE staging_raw_data;
+COPY staging_raw_data FROM '/data/MOCK_DATA (2).csv' DELIMITER ',' CSV HEADER;
+INSERT INTO raw_data SELECT 2, * FROM staging_raw_data;
+
+TRUNCATE staging_raw_data;
+COPY staging_raw_data FROM '/data/MOCK_DATA (3).csv' DELIMITER ',' CSV HEADER;
+INSERT INTO raw_data SELECT 3, * FROM staging_raw_data;
+
+TRUNCATE staging_raw_data;
+COPY staging_raw_data FROM '/data/MOCK_DATA (4).csv' DELIMITER ',' CSV HEADER;
+INSERT INTO raw_data SELECT 4, * FROM staging_raw_data;
+
+TRUNCATE staging_raw_data;
+COPY staging_raw_data FROM '/data/MOCK_DATA (5).csv' DELIMITER ',' CSV HEADER;
+INSERT INTO raw_data SELECT 5, * FROM staging_raw_data;
+
+TRUNCATE staging_raw_data;
+COPY staging_raw_data FROM '/data/MOCK_DATA (6).csv' DELIMITER ',' CSV HEADER;
+INSERT INTO raw_data SELECT 6, * FROM staging_raw_data;
+
+TRUNCATE staging_raw_data;
+COPY staging_raw_data FROM '/data/MOCK_DATA (7).csv' DELIMITER ',' CSV HEADER;
+INSERT INTO raw_data SELECT 7, * FROM staging_raw_data;
+
+TRUNCATE staging_raw_data;
+COPY staging_raw_data FROM '/data/MOCK_DATA (8).csv' DELIMITER ',' CSV HEADER;
+INSERT INTO raw_data SELECT 8, * FROM staging_raw_data;
+
+TRUNCATE staging_raw_data;
+COPY staging_raw_data FROM '/data/MOCK_DATA (9).csv' DELIMITER ',' CSV HEADER;
+INSERT INTO raw_data SELECT 9, * FROM staging_raw_data;
+
+DROP TABLE staging_raw_data;
 
 CREATE TABLE dim_location (
     location_id BIGSERIAL PRIMARY KEY,
