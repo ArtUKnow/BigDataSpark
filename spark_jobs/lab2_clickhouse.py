@@ -7,8 +7,15 @@ spark = SparkSession.builder \
 jdbc_pg = "jdbc:postgresql://postgres:5432/analytics"
 prop_pg = {"user": "user", "password": "password", "driver": "org.postgresql.Driver"}
 
-jdbc_ch = "jdbc:clickhouse://clickhouse:8123/default"
-prop_ch = {"user": "default", "password": "password", "driver": "com.clickhouse.jdbc.ClickHouseDriver"}
+jdbc_ch = "jdbc:clickhouse://clickhouse:8123/analytics"
+prop_ch = {
+    "user": "default",
+    "password": "password",
+    "driver": "com.clickhouse.jdbc.ClickHouseDriver",
+    "compress": "false",
+    "decompress": "false",
+    "jdbcCompliant": "false"
+}
 
 fact_sales = spark.read.jdbc(url=jdbc_pg, table="fact_sales", properties=prop_pg)
 dim_product = spark.read.jdbc(url=jdbc_pg, table="dim_product", properties=prop_pg)
@@ -36,7 +43,7 @@ report_product = spark.sql("""
     JOIN dim_product p ON f.product_id = p.product_id
     GROUP BY p.product_name, p.category, p.rating, p.reviews
 """)
-report_product.write.jdbc(url=jdbc_ch, table="report_product", mode="overwrite", properties=prop_ch)
+report_product.write.jdbc(url=jdbc_ch, table="report_product", mode="append", properties=prop_ch)
 
 report_customer = spark.sql("""
     SELECT 
@@ -50,7 +57,7 @@ report_customer = spark.sql("""
     LEFT JOIN dim_location l ON c.location_id = l.location_id
     GROUP BY c.first_name, c.last_name, l.country
 """)
-report_customer.write.jdbc(url=jdbc_ch, table="report_customer", mode="overwrite", properties=prop_ch)
+report_customer.write.jdbc(url=jdbc_ch, table="report_customer", mode="append", properties=prop_ch)
 
 report_time = spark.sql("""
     SELECT 
@@ -61,7 +68,7 @@ report_time = spark.sql("""
     FROM fact_sales f
     GROUP BY YEAR(f.sale_date), MONTH(f.sale_date)
 """)
-report_time.write.jdbc(url=jdbc_ch, table="report_time", mode="overwrite", properties=prop_ch)
+report_time.write.jdbc(url=jdbc_ch, table="report_time", mode="append", properties=prop_ch)
 
 report_store = spark.sql("""
     SELECT 
@@ -75,7 +82,7 @@ report_store = spark.sql("""
     LEFT JOIN dim_location l ON s.location_id = l.location_id
     GROUP BY s.store_name, l.city, l.country
 """)
-report_store.write.jdbc(url=jdbc_ch, table="report_store", mode="overwrite", properties=prop_ch)
+report_store.write.jdbc(url=jdbc_ch, table="report_store", mode="append", properties=prop_ch)
 
 report_supplier = spark.sql("""
     SELECT 
@@ -89,7 +96,7 @@ report_supplier = spark.sql("""
     LEFT JOIN dim_location l ON sup.location_id = l.location_id
     GROUP BY sup.supplier_name, l.country
 """)
-report_supplier.write.jdbc(url=jdbc_ch, table="report_supplier", mode="overwrite", properties=prop_ch)
+report_supplier.write.jdbc(url=jdbc_ch, table="report_supplier", mode="append", properties=prop_ch)
 
 report_quality = spark.sql("""
     SELECT 
@@ -101,6 +108,6 @@ report_quality = spark.sql("""
     JOIN dim_product p ON f.product_id = p.product_id
     GROUP BY p.product_name, p.rating, p.reviews
 """)
-report_quality.write.jdbc(url=jdbc_ch, table="report_quality", mode="overwrite", properties=prop_ch)
+report_quality.write.jdbc(url=jdbc_ch, table="report_quality", mode="append", properties=prop_ch)
 
 spark.stop()
